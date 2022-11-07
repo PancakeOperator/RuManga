@@ -6,24 +6,34 @@ use crate::components::app;
 use tui::layout::Constraint;
 use crate::components::app::RuManga;
 
-use super::app::AppTabs;
-pub fn start() -> Result<(), io::Error> {
+use super::app::{AppTabs, ui};
+pub fn start<B: Backend>(f: &mut Frame<B>) -> Result<(), io::Error> {
     enable_raw_mode()?;
     let mut stdout = stdout();
-    execute!(stdout, EnterAlternateScreen)?;
+    
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
     let mut frame = terminal.get_frame();
     let rust_manga = RuManga::new();
-
+    /*
+    match rust_manga {
+        _ => {
     
+            ui(&mut frame, &mut RuManga::new());
+        }
+        _ => {
+            app_fail(&mut terminal, "Fail", false);
+        }
+    }  */
+    /*
     if let apps = rust_manga {
-        app::ui(&mut frame)
+        app::ui(&mut frame, &mut RuManga::new())
     } else {
         app_fail(&mut terminal, "failure to start app", false);
     }
+     */
+    ui(f, &mut RuManga::new());
 
-    
     
     Ok(())
 }

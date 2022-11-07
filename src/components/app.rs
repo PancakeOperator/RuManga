@@ -1,6 +1,6 @@
 use std::fmt::Error;
 
-use tui::{widgets::{Tabs, Block, Borders, Widget}, layout::{Rect, Constraint, Direction, Layout}, Frame, backend::Backend, style::Style};
+use tui::{widgets::{Tabs, Block, Borders, Widget}, layout::{Rect, Constraint, Direction, Layout}, Frame, backend::Backend, style::{Style, Modifier, Color}, text::Spans};
 
 
 #[derive(Clone)]
@@ -93,32 +93,38 @@ impl RuManga {
     }
 }
 
-pub fn ui<B: Backend>(f: &mut Frame<B>) {
+pub fn ui<B: Backend>(f: &mut Frame<B>, ru_app: &mut RuManga) {
+    let main_frame = Layout::default()
+        .direction(Direction::Vertical)
+        .margin(1)
+        .constraints([Constraint::Length(3), Constraint::Min(0)].as_ref())
+        .split(f.size());
 
-    let size = f.size();
-    let vertical_chunks = Layout::default()
-			.direction(Direction::Vertical)
-			.constraints(
-				[
-					Constraint::Ratio(1, 3),
-					Constraint::Ratio(1, 3),
-					Constraint::Ratio(1, 3),
-				]
-				.as_ref(),
-			)
-			.split(size);
-    let blocks = Block::default()
-        .title("1 - 2")
-        .border_style(Style::default())
-        .borders(Borders::ALL);
-    /*
-    let block2 = Block::default()
-        .title("2")
-        .border_style(Style::default())
-        .borders(Borders::ALL);
-             */
-    f.render_widget(blocks, vertical_chunks[1]);
-    //f.render_widget(block2, vertical_chunks[1]);
+    let sub_top_frame = Layout::default()
+        .direction(Direction::Horizontal)
+        .margin(0)
+        .constraints([Constraint::Percentage(40), Constraint::Percentage(60)].as_ref())
+        .split(main_frame[0]);
+    
+    let tab_names = vec![
+        Spans::from("New"), 
+        Spans::from("UpdateList"), 
+        Spans::from("View")];
+    let block_navigation = Block::default().title("Navigation").borders(Borders::ALL);
+    let tabs = Tabs::new(tab_names)
+        .block(block_navigation)
+        .select(match ru_app.tabs {
+            AppTabs::New => 0,
+            AppTabs::UpdateList => 3,
+            AppTabs::View => 2,
+        })
+        .highlight_style(
+            Style::default()
+            .add_modifier(Modifier::BOLD)
+            .bg(Color::Green),
+        );
 
+        f.render_widget(tabs, sub_top_frame[0])
 }
+   
 
