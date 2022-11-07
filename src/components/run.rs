@@ -1,4 +1,4 @@
-use crossterm::{terminal::{enable_raw_mode, EnterAlternateScreen, self, disable_raw_mode, LeaveAlternateScreen}, execute, event::{Event, self, DisableMouseCapture}, cursor::Show};
+use crossterm::{terminal::{enable_raw_mode, EnterAlternateScreen, self, disable_raw_mode, LeaveAlternateScreen}, execute, event::{Event::{Key, self}, self, DisableMouseCapture, KeyCode, read, KeyEvent, KeyModifiers}, cursor::Show};
 use tui::{terminal::Terminal, backend::CrosstermBackend, widgets::Wrap};
 use tui::{Frame, backend::Backend, layout::{Layout, Direction}, text::Spans, widgets::Paragraph};
 use std::{io::{self, stdout}, time::Instant};
@@ -7,14 +7,13 @@ use tui::layout::Constraint;
 use crate::components::app::RuManga;
 
 use super::app::{AppTabs, ui};
-pub fn start<B: Backend>(f: &mut Frame<B>) -> Result<(), io::Error> {
+pub fn start<B: Backend>(f: &mut Frame<B>, ru_app: &mut RuManga) -> Result<(), io::Error> {
     enable_raw_mode()?;
     let mut stdout = stdout();
     
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
     let mut frame = terminal.get_frame();
-    let rust_manga = RuManga::new();
     /*
     match rust_manga {
         _ => {
@@ -26,16 +25,27 @@ pub fn start<B: Backend>(f: &mut Frame<B>) -> Result<(), io::Error> {
         }
     }  */
     /*
-    if let apps = rust_manga {
-        app::ui(&mut frame, &mut RuManga::new())
-    } else {
-        app_fail(&mut terminal, "failure to start app", false);
-    }
      */
-    ui(f, &mut RuManga::new());
 
     
+    ui(f, &mut RuManga::new());
+   
+    read_spook(&mut terminal);
+
     Ok(())
+}
+
+pub fn read_spook<B: Backend>(terminal: &mut Terminal<B>) -> KeyEvent {
+    loop {
+        if let Ok(event) = read() {
+            if let Key(key_event) = event {
+                return key_event;
+            }
+        } else {
+            app_fail( terminal, "Killing process", false);
+
+        }
+    } 
 }
 
 

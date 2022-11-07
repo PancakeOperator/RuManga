@@ -1,6 +1,6 @@
 use std::fmt::Error;
 
-use tui::{widgets::{Tabs, Block, Borders, Widget}, layout::{Rect, Constraint, Direction, Layout}, Frame, backend::Backend, style::{Style, Modifier, Color}, text::Spans};
+use tui::{widgets::{Tabs, Block, Borders, Widget, Paragraph}, layout::{Rect, Constraint, Direction, Layout}, Frame, backend::Backend, style::{Style, Modifier, Color}, text::Spans};
 
 
 #[derive(Clone)]
@@ -19,7 +19,7 @@ pub enum Login {
     UserPasscode,
 }
 #[derive(Clone)]
-enum Mode {
+pub enum Mode {
     InputMode,
     ViewMode,
 }
@@ -31,6 +31,7 @@ pub struct RuManga {
     mode: Mode,
     search: String,
     search_fail: bool,
+    search_fail_msg: String,
     exit: bool
 }
 
@@ -42,6 +43,7 @@ impl RuManga {
             mode: Mode::ViewMode,
             search: String::new(),
             search_fail: false,
+            search_fail_msg: String::new(),
             exit: false,
         };
     }
@@ -124,7 +126,26 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, ru_app: &mut RuManga) {
             .bg(Color::Green),
         );
 
-        f.render_widget(tabs, sub_top_frame[0])
+        f.render_widget(tabs, sub_top_frame[0]);
+
+
+        let block_search = Block::default()
+            .title(match ru_app.search_fail {
+                false => "fr".as_ref(),
+                true => ru_app.search_fail_msg.as_ref(),
+            })
+            .borders(Borders::ALL);
+        let search_func = Paragraph::new(ru_app.search.as_ref())
+            .style(match ru_app.mode {
+                Mode::InputMode => Style::default().fg(Color::LightBlue),
+                Mode::ViewMode => match ru_app.search_fail {
+                    true => Style::default().fg(Color::Red),
+                    false => Style::default(),
+                },
+            })
+            .block(block_search);
+
+        f.render_widget(search_func, sub_top_frame[1]);
 }
    
 
