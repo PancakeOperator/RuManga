@@ -19,7 +19,8 @@ fn main() -> Result<(), io::Error> {
     let _size = Rect::new(11, 234, 114, 18);
     terminal.draw(|f| {
         let _size = f.size();
-        components::run::start(f, &mut RuManga::new());
+        components::run::start(f);
+        
     })?;
     
     Ok(())

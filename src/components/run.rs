@@ -6,8 +6,8 @@ use crate::components::app;
 use tui::layout::Constraint;
 use crate::components::app::RuManga;
 
-use super::app::{AppTabs, ui};
-pub fn start<B: Backend>(f: &mut Frame<B>, ru_app: &mut RuManga) -> Result<(), io::Error> {
+use super::app::{AppTabs, ui, Mode};
+pub fn start<B: Backend>(f: &mut Frame<B>) -> Result<(), io::Error> {
     enable_raw_mode()?;
     let mut stdout = stdout();
     
@@ -27,12 +27,78 @@ pub fn start<B: Backend>(f: &mut Frame<B>, ru_app: &mut RuManga) -> Result<(), i
     /*
      */
 
-    
-    ui(f, &mut RuManga::new());
+    let mut ru_app = RuManga::new();
+    read_keys(f, &mut ru_app);
    
-    read_spook(&mut terminal);
-
+ 
     Ok(())
+}
+
+pub fn read_keys<B: Backend>(f: &mut Frame<B>, ru_app: &mut RuManga) {
+    ui(f, ru_app);
+    loop {
+        if let Ok(Event::Key(key)) = event::read() {
+            match ru_app.tabs {
+                AppTabs::New => match ru_app.mode {
+                    Mode::ViewMode => match key.code {
+                        KeyCode::Char('q') => {
+                            return;
+                        }
+                        KeyCode::Char('s') => {
+                            ru_app.search();
+                        }
+                        KeyCode::Esc => {
+                            ru_app.escape();
+                        }
+                        KeyCode::Tab => {
+                            ru_app.tab();
+                        }
+                        _ => {}
+                    }
+                    Mode::InputMode => match key.code {
+                        KeyCode::Esc => {
+                            ru_app.escape();
+                        }
+                        KeyCode::Backspace => {
+                            ru_app.search.pop();
+                        }
+                        KeyCode::Char(c) => {
+                            ru_app.search.push(c)
+                        }
+                        _ => {}
+                    },
+                    
+                }
+                AppTabs::UpdateList => match ru_app.mode {
+                    Mode::ViewMode => match key.code {
+                        KeyCode::Char('q') => {
+                            return;
+                        }
+                        KeyCode::Char('s') => {
+                            ru_app.search();
+                        }
+                        KeyCode::Tab => {
+                            ru_app.tab();
+                        }
+                        _ => {}
+                    }
+                    Mode::InputMode => match key.code {
+                        KeyCode::Char(c) => {
+                            ru_app.search.push(c);
+                        }
+                        KeyCode::BackTab => {
+                            ru_app.search.pop();
+                        }
+                        KeyCode::Esc => {
+                            ru_app.escape();
+                        }
+                        _ => {}
+                    }
+                },
+                AppTabs::View => todo!(),
+            }
+        }
+    }
 }
 
 pub fn read_spook<B: Backend>(terminal: &mut Terminal<B>) -> KeyEvent {

@@ -27,9 +27,9 @@ pub enum Mode {
 #[derive(Clone)]
 pub struct RuManga {
     login: Login,
-    tabs: AppTabs,
-    mode: Mode,
-    search: String,
+    pub tabs: AppTabs,
+    pub mode: Mode,
+    pub search: String,
     search_fail: bool,
     search_fail_msg: String,
     exit: bool
@@ -48,7 +48,7 @@ impl RuManga {
         };
     }
 
-    fn tab(&mut self) {
+    pub fn tab(&mut self) {
         self.tabs = match self.tabs {
             AppTabs::New => AppTabs::UpdateList,
             AppTabs::UpdateList => AppTabs::View,
@@ -56,7 +56,7 @@ impl RuManga {
         };
     }
 
-    fn search(&mut self) {
+    pub fn search(&mut self) {
         match self.mode {
             Mode::ViewMode => {
                 self.mode = Mode::InputMode;
@@ -87,7 +87,7 @@ impl RuManga {
         }
     }
     
-    fn escape(&mut self) {
+    pub fn escape(&mut self) {
         match self.mode {
             Mode::InputMode => self.mode = Mode::ViewMode,
             _ => self.exit = true,
