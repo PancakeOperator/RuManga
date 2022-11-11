@@ -27,16 +27,27 @@ pub fn start<B: Backend>(f: &mut Frame<B>) -> Result<(), io::Error> {
     /*
      */
 
-    let mut ru_app = RuManga::new();
-    read_keys(f, &mut ru_app);
-   
+    run_app(&mut terminal);
  
     Ok(())
 }
 
-pub fn read_keys<B: Backend>(f: &mut Frame<B>, ru_app: &mut RuManga) {
-    ui(f, ru_app);
+pub fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
     loop {
+        terminal.draw(ui)?;
+
+        if let Event::Key(key) = event::read()? {
+            if let KeyCode::Char('q') = key.code {
+                return Ok(());
+            }
+        }
+    }
+    
+}
+/* 
+pub fn read_keys<B: Backend>(terminal: &mut Terminal<B>,f: &mut Frame<B>, ru_app: &mut RuManga) {
+    loop {
+        terminal.draw(ui)?;
         if let Ok(Event::Key(key)) = event::read() {
             match ru_app.tabs {
                 AppTabs::New => match ru_app.mode {
@@ -113,6 +124,7 @@ pub fn read_spook<B: Backend>(terminal: &mut Terminal<B>) -> KeyEvent {
         }
     } 
 }
+*/
 
 
 pub fn app_fail<B: Backend>(terminal: &mut Terminal<B> ,msg: &str, instant: bool) {

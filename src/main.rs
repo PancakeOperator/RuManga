@@ -17,11 +17,8 @@ fn main() -> Result<(), io::Error> {
     let backend = tui::backend::CrosstermBackend::new(stdout);
     let mut terminal = tui::Terminal::new(backend)?;
     let _size = Rect::new(11, 234, 114, 18);
-    terminal.draw(|f| {
-        let _size = f.size();
-        components::run::start(f);
-        
-    })?;
+    components::run::run_app(&mut terminal);
+    
     
     Ok(())
 }

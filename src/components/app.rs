@@ -95,7 +95,8 @@ impl RuManga {
     }
 }
 
-pub fn ui<B: Backend>(f: &mut Frame<B>, ru_app: &mut RuManga) {
+pub fn ui<B: Backend>(f: &mut Frame<B>) {
+    let ru_app = RuManga::new();
     let main_frame = Layout::default()
         .direction(Direction::Vertical)
         .margin(1)
