@@ -1,8 +1,37 @@
-use std::fmt::Error;
+use std::{fmt::Error, io};
 
-use tui::{widgets::{Tabs, Block, Borders, Widget, Paragraph}, layout::{Rect, Constraint, Direction, Layout}, Frame, backend::Backend, style::{Style, Modifier, Color}, text::Spans};
+use crossterm::event::{KeyCode, Event, self};
+use tui::{widgets::{Tabs, Block, Borders, Widget, Paragraph}, layout::{Rect, Constraint, Direction, Layout}, Frame, backend::Backend, style::{Style, Modifier, Color}, text::Spans, Terminal};
+
+use super::run::app_fail;
+
+#[derive(Clone)]
+pub struct TrueTab<'a> {
+    pub titles: Vec<&'a str>,
+    pub index: usize
+}
 
 
+impl<'a> TrueTab<'a> {
+    pub fn new() -> TrueTab<'a> {
+        TrueTab {
+            titles: vec!["Tab0", "Tab1", "Tab2", "Tab3"],
+            index: 0,
+        }
+    }
+
+    pub fn next(&mut self) {
+        self.index = (self.index + 1) % self.titles.len();
+    }
+
+    pub fn previous(&mut self) {
+        if self.index > 0 {
+            self.index -= 1;
+        } else {
+            self.index = self.titles.len() - 1;
+        }
+    }
+}
 #[derive(Clone)]
 pub enum AppTabs {
     New,
@@ -25,9 +54,9 @@ pub enum Mode {
 }
 
 #[derive(Clone)]
-pub struct RuManga {
+pub struct RuManga<'a> {
     login: Login,
-    pub tabs: AppTabs,
+    pub tabs: TrueTab<'a>,
     pub mode: Mode,
     pub search: String,
     search_fail: bool,
@@ -35,11 +64,18 @@ pub struct RuManga {
     exit: bool
 }
 
-impl RuManga {
-    pub fn new() -> RuManga {
+impl RuManga<'_> {
+    pub fn escape(&mut self) {
+        match self.mode {
+            Mode::InputMode => self.mode = Mode::ViewMode,
+            _ => self.exit = true,
+        }
+    }
+
+    pub fn new() -> RuManga<'static> {
         return RuManga {
             login: Login::UserName,
-            tabs: AppTabs::New,
+            tabs: TrueTab::new(),
             mode: Mode::ViewMode,
             search: String::new(),
             search_fail: false,
@@ -47,15 +83,7 @@ impl RuManga {
             exit: false,
         };
     }
-
-    pub fn tab(&mut self) {
-        self.tabs = match self.tabs {
-            AppTabs::New => AppTabs::UpdateList,
-            AppTabs::UpdateList => AppTabs::View,
-            AppTabs::View => AppTabs::New,  
-        };
-    }
-
+    
     pub fn search(&mut self) {
         match self.mode {
             Mode::ViewMode => {
@@ -64,40 +92,28 @@ impl RuManga {
             }
             _ => {},
         }
-        match self.tabs {
-            AppTabs::New => {
-                self.tabs = AppTabs::UpdateList;
-            }
-            AppTabs::New => {
-                self.tabs = AppTabs::View;
-            }
-            AppTabs::UpdateList => {
-                self.tabs = AppTabs::View;
-            }
-            AppTabs::UpdateList => {
-                self.tabs = AppTabs::New;
-            }
-            AppTabs::View => {
-                self.tabs = AppTabs::New;
-            }
-            AppTabs::View => {
-                self.tabs = AppTabs::UpdateList;
-            }
-            _ => {},
-        }
     }
     
-    pub fn escape(&mut self) {
-        match self.mode {
-            Mode::InputMode => self.mode = Mode::ViewMode,
-            _ => self.exit = true,
+    pub fn tab(&mut self)  {
+        let mut app = TrueTab::new();
+        if let Ok(Event::Key(key)) = event::read() {
+            match key.code {
+                KeyCode::Char('q') => return {},
+                KeyCode::Right => app.next(),
+                KeyCode::Left => app.previous(),
+                _ => {},
+            }
         }
+        
     }
 
     
 }
 
+
+
 pub fn ui<B: Backend>(f: &mut Frame<B>) {
+    let app = TrueTab::new();
     let ru_app = RuManga::new();
     let main_frame = Layout::default()
         .direction(Direction::Vertical)
@@ -118,11 +134,9 @@ pub fn ui<B: Backend>(f: &mut Frame<B>) {
     let block_navigation = Block::default().title("Navigation").borders(Borders::ALL);
     let tabs = Tabs::new(tab_names)
         .block(block_navigation)
-        .select(match ru_app.tabs {
-            AppTabs::New => 0,
-            AppTabs::UpdateList => 3,
-            AppTabs::View => 2,
-        })
+        .select(
+            app.index
+        )
         .highlight_style(
             Style::default()
             .add_modifier(Modifier::BOLD)

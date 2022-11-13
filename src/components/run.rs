@@ -6,7 +6,7 @@ use crate::components::app;
 use tui::layout::Constraint;
 use crate::components::app::RuManga;
 
-use super::app::{AppTabs, ui, Mode};
+use super::app::{AppTabs, ui, Mode, TrueTab};
 pub fn start<B: Backend>(_f: &mut Frame<B>) -> Result<(), io::Error> {
     enable_raw_mode()?;
     let mut stdout = stdout();
@@ -38,82 +38,30 @@ pub fn start<B: Backend>(_f: &mut Frame<B>) -> Result<(), io::Error> {
 pub fn run_app<B: Backend>(terminal: &mut Terminal<B>, fr: &mut Frame<B>) -> io::Result<()> {
     loop {
         terminal.draw(ui)?;
-
-        read_keys(terminal,  fr, &mut RuManga::new())
+        //read_spook(terminal);
+        keys(terminal, fr);
+        //read_keys(terminal,  fr, &mut RuManga::new())
     }
     
 }
-pub fn keys<B: Backend>(terminal: &mut Terminal<B>, f: &mut Frame<B>, ru_app: &mut RuManga) {
+pub fn keys<B: Backend>(terminal: &mut Terminal<B>, f: &mut Frame<B>) {
+    let mut ru_apps = RuManga::new();
     loop {
-
+        ru_apps.tab();
     }
 }
 
 
-pub fn read_keys<B: Backend>(terminal: &mut Terminal<B>,f: &mut Frame<B>, ru_app: &mut RuManga) {
+pub fn read_keys<B: Backend>(terminal: &mut Terminal<B>,f: &mut Frame<B>, ru_app: &mut RuManga) -> ! {
+    let mut apps = app::TrueTab::new();
     loop {
-        
         if let Ok(Event::Key(key)) = event::read() {
-            match ru_app.tabs {
-                AppTabs::New => match ru_app.mode {
-                    Mode::ViewMode => match key.code {
-                        KeyCode::Char('q') => {
-                            return app_fail(terminal, "Fail", false);
-                        }
-                        KeyCode::Char('s') => {
-                            ru_app.search();
-                        }
-                        KeyCode::Esc => {
-                            ru_app.escape();
-                        }
-                        KeyCode::Tab => {
-                            ru_app.tab();
-                        }
-                        _ => {}
-                    }
-                    Mode::InputMode => match key.code {
-                        KeyCode::Esc => {
-                            ru_app.escape();
-                        }
-                        KeyCode::Backspace => {
-                            ru_app.search.pop();
-                        }
-                        KeyCode::Char(c) => {
-                            ru_app.search.push(c)
-                        }
-                        _ => {}
-                    },
-                    
-                }
-                AppTabs::UpdateList => match ru_app.mode {
-                    Mode::ViewMode => match key.code {
-                        KeyCode::Char('q') => {
-                            return;
-                        }
-                        KeyCode::Char('s') => {
-                            ru_app.search();
-                        }
-                        KeyCode::Tab => {
-                            ru_app.tab();
-                        }
-                        _ => {}
-                    }
-                    Mode::InputMode => match key.code {
-                        KeyCode::Char(c) => {
-                            ru_app.search.push(c);
-                        }
-                        KeyCode::BackTab => {
-                            ru_app.search.pop();
-                        }
-                        KeyCode::Esc => {
-                            ru_app.escape();
-                        }
-                        _ => {}
-                    }
-                },
-                AppTabs::View => todo!(),
-            }
-        }
+            match apps.index {
+                0 => apps.next(),
+                1 => apps.previous(),
+                _ => {}
+            }  
+        };
     }
 }
 
