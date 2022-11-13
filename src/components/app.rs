@@ -93,6 +93,8 @@ impl RuManga {
             _ => self.exit = true,
         }
     }
+
+    
 }
 
 pub fn ui<B: Backend>(f: &mut Frame<B>) {

@@ -12,12 +12,20 @@ use components::{run::start, app::RuManga};
 
 fn main() -> Result<(), io::Error> {
     enable_raw_mode()?;
+    //for the frame
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen ,EnableMouseCapture)?;
     let backend = tui::backend::CrosstermBackend::new(stdout);
     let mut terminal = tui::Terminal::new(backend)?;
-    let _size = Rect::new(11, 234, 114, 18);
-    components::run::run_app(&mut terminal);
+    let mut frame = terminal.get_frame();
+
+    //for the terminal
+    let mut stdouts = io::stdout();
+    let backends = tui::backend::CrosstermBackend::new(stdouts);
+    let mut terminals = tui::Terminal::new(backends)?;
+
+
+    components::run::run_app(&mut terminals, &mut frame);
     
     
     Ok(())
