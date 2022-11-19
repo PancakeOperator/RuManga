@@ -4,6 +4,7 @@ use tui::{Frame, backend::Backend, layout::{Layout, Direction}, text::Spans, wid
 use std::{io::{self, stdout}, time::Instant};
 use crate::components::app;
 use tui::layout::Constraint;
+use errno::errno;
 use crate::components::app::RuManga;
 
 use super::app::{AppTabs, ui, Mode};
@@ -14,18 +15,6 @@ pub fn start<B: Backend>(f: &mut Frame<B>) -> Result<(), io::Error> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
     let mut frame = terminal.get_frame();
-    /*
-    match rust_manga {
-        _ => {
-    
-            ui(&mut frame, &mut RuManga::new());
-        }
-        _ => {
-            app_fail(&mut terminal, "Fail", false);
-        }
-    }  */
-    /*
-     */
 
     run_app(&mut terminal);
  
@@ -35,97 +24,61 @@ pub fn start<B: Backend>(f: &mut Frame<B>) -> Result<(), io::Error> {
 pub fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
     loop {
         terminal.draw(ui)?;
-
+        let mut ru_app = RuManga::new();
+        let mut tab_start = AppTabs::View;
+        let mut update = AppTabs::UpdateList;
         if let Event::Key(key) = event::read()? {
-            if let KeyCode::Char('q') = key.code {
-                return Ok(());
-            }
-        }
-    }
-    
-}
-/* 
-pub fn read_keys<B: Backend>(terminal: &mut Terminal<B>,f: &mut Frame<B>, ru_app: &mut RuManga) {
-    loop {
-        terminal.draw(ui)?;
-        if let Ok(Event::Key(key)) = event::read() {
             match ru_app.tabs {
-                AppTabs::New => match ru_app.mode {
+                AppTabs::UpdateList => todo!(),
+                AppTabs::View => match ru_app.mode {
                     Mode::ViewMode => match key.code {
                         KeyCode::Char('q') => {
-                            return;
-                        }
-                        KeyCode::Char('s') => {
-                            ru_app.search();
-                        }
-                        KeyCode::Esc => {
-                            ru_app.escape();
+                            die("\n Ending Program!");
                         }
                         KeyCode::Tab => {
                             ru_app.tab();
                         }
-                        _ => {}
+                        KeyCode::Esc => {
+                            ru_app.escape()
+                        }
+                        _ => {
+                        }
                     }
                     Mode::InputMode => match key.code {
-                        KeyCode::Esc => {
-                            ru_app.escape();
-                        }
-                        KeyCode::Backspace => {
-                            ru_app.search.pop();
-                        }
-                        KeyCode::Char(c) => {
-                            ru_app.search.push(c)
-                        }
-                        _ => {}
-                    },
-                    
-                }
-                AppTabs::UpdateList => match ru_app.mode {
-                    Mode::ViewMode => match key.code {
                         KeyCode::Char('q') => {
-                            return;
+                            die("\nEnding Program")
                         }
-                        KeyCode::Char('s') => {
-                            ru_app.search();
+                        KeyCode::Esc => {
+                            ru_app.escape()
                         }
                         KeyCode::Tab => {
-                            ru_app.tab();
+                            ru_app.tab()
                         }
-                        _ => {}
-                    }
-                    Mode::InputMode => match key.code {
-                        KeyCode::Char(c) => {
-                            ru_app.search.push(c);
-                        }
-                        KeyCode::BackTab => {
-                            ru_app.search.pop();
-                        }
-                        KeyCode::Esc => {
-                            ru_app.escape();
+                        KeyCode::Char('s') => {
+                            ru_app.search()
                         }
                         _ => {}
                     }
                 },
-                AppTabs::View => todo!(),
             }
         }
+        /* 
+        if let Event::Key(key) = event::read()? {
+            if let KeyCode::Char('q') = key.code {
+                return Ok(());
+            }
+
+
+        }*/
     }
+    
 }
 
-pub fn read_spook<B: Backend>(terminal: &mut Terminal<B>) -> KeyEvent {
-    loop {
-        if let Ok(event) = read() {
-            if let Key(key_event) = event {
-                return key_event;
-            }
-        } else {
-            app_fail( terminal, "Killing process", false);
-
-        }
-    } 
+pub fn die<S: Into<String>>( msg: S) {
+    let _ = terminal::disable_raw_mode();
+    eprintln!("\n{}, {}", msg.into(), errno());
+    std::process::exit(1);
 }
-*/
-
 
 pub fn app_fail<B: Backend>(terminal: &mut Terminal<B> ,msg: &str, instant: bool) {
     loop {
@@ -141,18 +94,5 @@ pub fn app_fail<B: Backend>(terminal: &mut Terminal<B> ,msg: &str, instant: bool
 
             f.render_widget(paragraph, layout[0]);
         });
-
-
-        if instant {
-            return;
-        }
-
-        if let Event::Key(key) = event::read().unwrap() {
-            match key.code {
-                _ => {
-                    return;
-                }
-            }
-        }
     }
 }

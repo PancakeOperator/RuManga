@@ -17,7 +17,8 @@ fn main() -> Result<(), io::Error> {
     let backend = tui::backend::CrosstermBackend::new(stdout);
     let mut terminal = tui::Terminal::new(backend)?;
     let _size = Rect::new(11, 234, 114, 18);
-    components::run::run_app(&mut terminal);
+    let mut frame = terminal.get_frame();
+    components::run::start(&mut frame);
     
     
     Ok(())

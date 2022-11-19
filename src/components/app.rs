@@ -1,11 +1,11 @@
 use std::fmt::Error;
 
+use crossterm::event::KeyCode;
 use tui::{widgets::{Tabs, Block, Borders, Widget, Paragraph}, layout::{Rect, Constraint, Direction, Layout}, Frame, backend::Backend, style::{Style, Modifier, Color}, text::Spans};
-
+use unicode_width::UnicodeWidthStr;
 
 #[derive(Clone)]
 pub enum AppTabs {
-    New,
     UpdateList,
     View,
 }
@@ -36,23 +36,24 @@ pub struct RuManga {
 }
 
 impl RuManga {
-    pub fn new() -> RuManga {
+    pub fn new() -> RuManga{
         return RuManga {
             login: Login::UserName,
-            tabs: AppTabs::New,
+            tabs: AppTabs::View,
             mode: Mode::ViewMode,
             search: String::new(),
             search_fail: false,
             search_fail_msg: String::new(),
             exit: false,
+            
         };
     }
+   
 
     pub fn tab(&mut self) {
         self.tabs = match self.tabs {
-            AppTabs::New => AppTabs::UpdateList,
             AppTabs::UpdateList => AppTabs::View,
-            AppTabs::View => AppTabs::New,  
+            AppTabs::View => AppTabs::UpdateList,  
         };
     }
 
@@ -65,23 +66,8 @@ impl RuManga {
             _ => {},
         }
         match self.tabs {
-            AppTabs::New => {
-                self.tabs = AppTabs::UpdateList;
-            }
-            AppTabs::New => {
-                self.tabs = AppTabs::View;
-            }
-            AppTabs::UpdateList => {
-                self.tabs = AppTabs::View;
-            }
-            AppTabs::UpdateList => {
-                self.tabs = AppTabs::New;
-            }
             AppTabs::View => {
-                self.tabs = AppTabs::New;
-            }
-            AppTabs::View => {
-                self.tabs = AppTabs::UpdateList;
+                self.tabs = AppTabs::View
             }
             _ => {},
         }
@@ -95,6 +81,10 @@ impl RuManga {
     }
 }
 
+
+pub fn tab_name() {
+
+}
 pub fn ui<B: Backend>(f: &mut Frame<B>) {
     let ru_app = RuManga::new();
     let main_frame = Layout::default()
@@ -109,17 +99,16 @@ pub fn ui<B: Backend>(f: &mut Frame<B>) {
         .constraints([Constraint::Percentage(40), Constraint::Percentage(60)].as_ref())
         .split(main_frame[0]);
     
-    let tab_names = vec![
-        Spans::from("New"), 
-        Spans::from("UpdateList"), 
-        Spans::from("View")];
+    
     let block_navigation = Block::default().title("Navigation").borders(Borders::ALL);
+    let tab_names = vec![
+        Spans::from("View"), 
+        Spans::from("Updated")];
     let tabs = Tabs::new(tab_names)
         .block(block_navigation)
-        .select(match ru_app.tabs {
-            AppTabs::New => 0,
-            AppTabs::UpdateList => 3,
-            AppTabs::View => 2,
+        .select(match ru_app.tabs {  
+            AppTabs::UpdateList => 0,
+            AppTabs::View => 1,
         })
         .highlight_style(
             Style::default()
@@ -147,6 +136,17 @@ pub fn ui<B: Backend>(f: &mut Frame<B>) {
             .block(block_search);
 
         f.render_widget(search_func, sub_top_frame[1]);
+
+
+        match ru_app.mode {
+            Mode::InputMode => f.set_cursor(
+                sub_top_frame[1].x + ru_app.search.width() as u16 + 1,
+                sub_top_frame[1].y + 1,
+            ),
+            Mode::ViewMode => {}
+        }
+
+        
 }
    
 

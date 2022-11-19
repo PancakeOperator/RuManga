@@ -9,6 +9,7 @@ dependencies = [
  "crossterm",
  "errno",
  "tui",
+ "unicode-width",
 ]
 
 [[package]]
